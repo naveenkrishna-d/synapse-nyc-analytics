@@ -254,7 +254,27 @@
 			"apiVersion": "2019-06-01-preview",
 			"properties": {
 				"content": {
-					"query": "SELECT TOP 100 * \nFROM \n    OPENROWSET(\n        BULK 'abfss://nyc-taxi-data@marlabsnycanalyticsdl.dfs.core.windows.net/taxi_zone.csv',\n        FORMAT='CSV',\n        PARSER_VERSION='2.0',\n        HEADER_ROW = TRUE,\n        FIELDTERMINATOR=',',\n        ROWTERMINATOR='\\n'\n)WITH (\n    location_id SMALLINT 1,\n    borough VARCHAR(15) 2,\n    zone VARCHAR(50) 3,\n    service_zone VARCHAR(15) 4\n)\n\n AS [result]",
+					"query": "SELECT location_id, COUNT(*) \nFROM \n    OPENROWSET(\n        BULK 'https://marlabsnycanalyticsdl.dfs.core.windows.net/nyc-taxi-data/raw/taxi_zone.csv',\n        FORMAT='CSV',\n        PARSER_VERSION='2.0',\n        HEADER_ROW = TRUE,\n        FIELDTERMINATOR=',',\n        ROWTERMINATOR='\\n'\n)WITH (\n    location_id SMALLINT 1,\n    borough VARCHAR(15) 2,\n    zone VARCHAR(50) 3,\n    service_zone VARCHAR(15) 4\n)\n AS [result]\n GROUP BY location_id\n HAVING COUNT(*)>1;\n\n--------------\nSELECT \n    MIN(total_amount) as min_total_amount,\n    MAX(total_amount) as max_total_amount,\n    AVG(total_amount) as avg_total_amount,\n    COUNT(1) as total_number_of_records,\n    COUNT(total_amount) as non_null_total_number_of_records\nFROM \n    OPENROWSET(\n        BULK 'trip_data_green_parquet/year=2020/month=01/',\n        FORMAT='PARQUET',\n        DATA_SOURCE = 'nyc_taxi_data_raw'\n)\n AS [result]\n\n-----\n\nSELECT \n    TOP 100 *\nFROM \n    OPENROWSET(\n        BULK 'trip_data_green_parquet/year=2020/month=01/',\n        FORMAT='PARQUET',\n        DATA_SOURCE = 'nyc_taxi_data_raw'\n)\n AS [result]\n ORDER BY total_amount\n\n-------\n\nSELECT \n    payment_type, COUNT(1) AS count\nFROM \n    OPENROWSET(\n        BULK 'trip_data_green_parquet/year=2020/month=01/',\n        FORMAT='PARQUET',\n        DATA_SOURCE = 'nyc_taxi_data_raw'\n)\n AS [result]\n GROUP BY payment_type\n ORDER BY payment_type\n\n\n----\nSELECT \n    payment_type, COUNT(1) AS count\nFROM \n    OPENROWSET(\n        BULK 'trip_data_green_parquet/year=2020/month=01/',\n        FORMAT='PARQUET',\n        DATA_SOURCE = 'nyc_taxi_data_raw'\n)\n AS [result]\n GROUP BY payment_type\n ORDER BY payment_type\n\n\n",
+					"metadata": {
+						"language": "sql"
+					},
+					"currentConnection": {
+						"databaseName": "nyc_taxi_discovery",
+						"poolName": "Built-in"
+					},
+					"resultLimit": 5000
+				},
+				"type": "SqlQuery"
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/9_payment_type_join')]",
+			"type": "Microsoft.Synapse/workspaces/sqlscripts",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"content": {
+					"query": "SELECT \n    TOP 100\n    result.VendorID,\n    result.lpep_pickup_datetime,\n    result.lpep_dropoff_datetime,\n    result.store_and_fwd_flag,\n    result.RatecodeID,\n    result.PULocationID,\n    result.DOLocationID,\n    result.passenger_count,\n    result.trip_distance,\n    result.fare_amount,\n    result.extra,\n    result.mta_tax,\n    result.tip_amount,\n    result.tolls_amount,\n    result.ehail_fee,\n    result.improvement_surcharge,\n    result.total_amount,\n    payment_type.payment_type_desc AS payment_type_desc,\n    result.trip_type,\n    result.congestion_surcharge\nFROM \n    OPENROWSET(\n        BULK '/trip_data_green_parquet/year=2020/month=01/',\n        FORMAT='PARQUET',\n        DATA_SOURCE = 'nyc_taxi_data_raw'\n    ) AS result\nJOIN\n    OPENROWSET(\n        BULK 'raw/payment_type.json',\n        DATA_SOURCE = 'nyc_taxi_data',\n        FORMAT='CSV',\n        PARSER_VERSION='1.0',\n        FIELDTERMINATOR = '0x0A', -- Line terminator\n        FIELDQUOTE = '0x22', -- Double quote\n        ROWTERMINATOR = '0x0A' -- Line terminator\n        \n    ) WITH (\n        payment_type INT,\n        payment_type_desc NVARCHAR(50)\n    ) AS payment_type\nON result.payment_type = payment_type.payment_type\n\nSELECT * \nFROM\nOPENROWSET(\n        BULK 'raw/payment_type.json',\n        DATA_SOURCE = 'nyc_taxi_data',\n        FORMAT='CSV',\n        PARSER_VERSION='1.0',\n        --FIELDTERMINATOR = '0x0A', -- Line terminator\n        --FIELDQUOTE = '0x22', -- Double quote\n        --ROWTERMINATOR = '0x0A' -- Line terminator\n        FIELDTERMINATOR ='0x0b',\n        ROWTERMINATOR='0x0a',\n        FIELDQUOTE='0x0b'\n    ) WITH (\n        payment_type INT,\n        payment_type_desc NVARCHAR(50)\n    ) AS payment_type\n\nSELECT  JSON_VALUE(jsonDoc, '$.payment_type') payment_type,\n        JSON_VALUE(jsonDoc, '$.payment_type_desc') payment_type_desc\nFROM\n    OPENROWSET(\n        BULK '/raw/payment_type.json',\n        DATA_SOURCE= 'nyc_taxi_data',\n        FORMAT='CSV',\n        PARSER_VERSION='1.0',\n        HEADER_ROW = TRUE,\n        FIELDTERMINATOR ='0x0b',\n        ROWTERMINATOR='0x0a',\n        FIELDQUOTE='0x0b'\n    )with (jsonDoc nvarchar(max)) \n    AS payment_type\n",
 					"metadata": {
 						"language": "sql"
 					},
