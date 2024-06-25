@@ -1,0 +1,17 @@
+{
+	"name": "8_check_duplicates",
+	"properties": {
+		"content": {
+			"query": "SELECT TOP 100 * \nFROM \n    OPENROWSET(\n        BULK 'abfss://nyc-taxi-data@marlabsnycanalyticsdl.dfs.core.windows.net/taxi_zone.csv',\n        FORMAT='CSV',\n        PARSER_VERSION='2.0',\n        HEADER_ROW = TRUE,\n        FIELDTERMINATOR=',',\n        ROWTERMINATOR='\\n'\n)WITH (\n    location_id SMALLINT 1,\n    borough VARCHAR(15) 2,\n    zone VARCHAR(50) 3,\n    service_zone VARCHAR(15) 4\n)\n\n AS [result]",
+			"metadata": {
+				"language": "sql"
+			},
+			"currentConnection": {
+				"databaseName": "nyc_taxi_discovery",
+				"poolName": "Built-in"
+			},
+			"resultLimit": 5000
+		},
+		"type": "SqlQuery"
+	}
+}
