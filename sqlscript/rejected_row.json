@@ -1,11 +1,11 @@
 {
-	"name": "SQL script 4",
+	"name": "rejected_row",
 	"properties": {
 		"folder": {
 			"name": "ldw"
 		},
 		"content": {
-			"query": "\nUSE ny_taxi_ldw;\n\nCREATE EXTERNAL DATA SOURCE nyc_taxi_src1\nWITH\n  ( \n    LOCATION = 'https://marlabsnycanalyticsdl.dfs.core.windows.net/nyc-taxi-data' \n  );\n\nCREATE EXTERNAL FILE FORMAT csv_file_format2\nWITH (\n        FORMAT_TYPE = DELIMITEDTEXT,\n        FORMAT_OPTIONS ( \n\n             FIELD_TERMINATOR = ',',\n            STRING_DELIMITER = '\"',\n            FIRST_ROW = 2,\n            USE_TYPE_DEFAULT = FALSE, \n            ENCODING = 'UTF8',\n            PARSER_VERSION = '2.0'\n        ) \n    );\n\n-- Create a new external table\nCREATE EXTERNAL TABLE bronze.taxi_zone2\n    ( \n        location_id SMALLINT,\n        borough VARCHAR(15),\n        zone VARCHAR(50),\n        service_zone VARCHAR(15)\n     )\n    WITH (\n        LOCATION = 'raw/taxi_zone.csv',\n        DATA_SOURCE = nyc_taxi_src,\n        FILE_FORMAT = csv_file_format2\n    );\n\n\nSELECT * FROM bronze.taxi_zone2;\n\n",
+			"query": "IF OBJECT_ID('bronze.taxi_zone') IS NOT NULL\n  DROP EXTERNAL TABLE bronze.taxi_zone\n\n--Create a new external table\nCREATE EXTERNAL TABLE bronze.taxi_zone\n  (\n\n    location_id SMALLINT,\n    borough VARCHAR(15),\n    zone VARCHAR(5),\n    service_zone VARCHAR(15)\n  )\n  WITH (\n    LOCATION = 'raw/taxi_zone.csv',\n    DATA_SOURCE = nyc_taxi_src,\n    FILE_FORMAT = csv_file_format_pv1,\n    REJECT_VALUE = 10,\n    REJECTED_ROW_LOCATION = 'rejections/taxi_zone'\n\n  );\n\nSELECT * from bronze.taxi_zone",
 			"metadata": {
 				"language": "sql"
 			},
