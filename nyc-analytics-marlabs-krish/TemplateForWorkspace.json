@@ -375,7 +375,7 @@
 			"dependsOn": []
 		},
 		{
-			"name": "[concat(parameters('workspaceName'), '/create_external_table')]",
+			"name": "[concat(parameters('workspaceName'), '/SQL script 5')]",
 			"type": "Microsoft.Synapse/workspaces/sqlscripts",
 			"apiVersion": "2019-06-01-preview",
 			"properties": {
@@ -383,7 +383,7 @@
 					"name": "ldw"
 				},
 				"content": {
-					"query": "-- Create a new external table\nCREATE EXTERNAL TABLE  bronze.taxi_zone\n    (\n        loacation_id SMALLINT,\n        borough VARCHAR(15),\n        zone VARCHAR(50),\n        service_zone VARCHAR(15)\n     )\n    WITH (\n        LOCATION = 'raw/taxi_zone.csv',\n        DATA_SOURCE = nyc_taxi_src,\n        FILE_FORMAT = csv_file_format\n    );\n\n--DROP EXTERNAL TABLE bronze.taxi_zone2\n\nSELECT TOP (100) *\n FROM bronze.taxi_zone\n\n\nCREATE EXTERNAL TABLE bronze.taxi_zone\n    ( \n        location_id SMALLINT,\n        borough VARCHAR(15),\n        zone VARCHAR(50),\n        service_zone VARCHAR(15)\n     )\n    WITH (\n        LOCATION = 'raw/taxi_zone.csv',\n        DATA_SOURCE = nyc_taxi_src,\n        FILE_FORMAT = csv_file_format\n    );\n\n\nSELECT * FROM bronze.taxi_zone;\n",
+					"query": "IF NOT EXISTS(SELECT * FROM sys.external_file_formats where name='csv_file_format_pv1')\n    CREATE EXTERNAL FILE FORMAT csv_file_format_pv1\n    WITH (\n            FORMAT_TYPE = DELIMITEDTEXT,\n            FORMAT_OPTIONS ( \n\n                FIELD_TERMINATOR = ',',\n                STRING_DELIMITER = '\"',\n                FIRST_ROW = 2,\n                USE_TYPE_DEFAULT = FALSE, \n                ENCODING = 'UTF8',\n                PARSER_VERSION = '2.0'\n            ) \n        );",
 					"metadata": {
 						"language": "sql"
 					},
@@ -398,7 +398,7 @@
 			"dependsOn": []
 		},
 		{
-			"name": "[concat(parameters('workspaceName'), '/SQL script 5')]",
+			"name": "[concat(parameters('workspaceName'), '/create_external_table')]",
 			"type": "Microsoft.Synapse/workspaces/sqlscripts",
 			"apiVersion": "2019-06-01-preview",
 			"properties": {
@@ -406,7 +406,7 @@
 					"name": "ldw"
 				},
 				"content": {
-					"query": "IF NOT EXISTS(SELECT * FROM sys.external_file_formats where name='csv_file_format_pv1')\n    CREATE EXTERNAL FILE FORMAT csv_file_format_pv1\n    WITH (\n            FORMAT_TYPE = DELIMITEDTEXT,\n            FORMAT_OPTIONS ( \n\n                FIELD_TERMINATOR = ',',\n                STRING_DELIMITER = '\"',\n                FIRST_ROW = 2,\n                USE_TYPE_DEFAULT = FALSE, \n                ENCODING = 'UTF8',\n                PARSER_VERSION = '2.0'\n            ) \n        );",
+					"query": "-- Create a new external table\nCREATE EXTERNAL TABLE  bronze.taxi_zone\n    (\n        loacation_id SMALLINT,\n        borough VARCHAR(15),\n        zone VARCHAR(50),\n        service_zone VARCHAR(15)\n     )\n    WITH (\n        LOCATION = 'raw/taxi_zone.csv',\n        DATA_SOURCE = nyc_taxi_src,\n        FILE_FORMAT = csv_file_format\n    );\n\n--DROP EXTERNAL TABLE bronze.taxi_zone2\n\nSELECT TOP (100) *\n FROM bronze.taxi_zone\n\n\n-- CREATE EXTERNAL TABLE bronze.taxi_zone\n--     ( \n--         location_id SMALLINT,\n--         borough VARCHAR(15),\n--         zone VARCHAR(50),\n--         service_zone VARCHAR(15)\n--      )\n--     WITH (\n--         LOCATION = 'raw/taxi_zone.csv',\n--         DATA_SOURCE = nyc_taxi_src,\n--         FILE_FORMAT = csv_file_format\n--     );\n\n\n-- SELECT * FROM bronze.taxi_zone;\n",
 					"metadata": {
 						"language": "sql"
 					},
