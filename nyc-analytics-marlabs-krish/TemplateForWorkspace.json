@@ -289,6 +289,26 @@
 			"dependsOn": []
 		},
 		{
+			"name": "[concat(parameters('workspaceName'), '/AUTO create_external_table')]",
+			"type": "Microsoft.Synapse/workspaces/sqlscripts",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"content": {
+					"query": "IF NOT EXISTS (SELECT * FROM sys.external_file_formats WHERE name = 'SynapseDelimitedTextFormat') \n\tCREATE EXTERNAL FILE FORMAT [SynapseDelimitedTextFormat] \n\tWITH ( FORMAT_TYPE = DELIMITEDTEXT ,\n\t       FORMAT_OPTIONS (\n\t\t\t FIELD_TERMINATOR = ',',\n\t\t\t USE_TYPE_DEFAULT = FALSE\n\t\t\t))\nGO\n\nIF NOT EXISTS (SELECT * FROM sys.external_data_sources WHERE name = 'nyc-taxi-data_marlabsnycanalyticsdl_dfs_core_windows_net') \n\tCREATE EXTERNAL DATA SOURCE [nyc-taxi-data_marlabsnycanalyticsdl_dfs_core_windows_net] \n\tWITH (\n\t\tLOCATION = 'abfss://nyc-taxi-data@marlabsnycanalyticsdl.dfs.core.windows.net' \n\t)\nGO\n\nCREATE EXTERNAL TABLE bronze.taxi_zone2 (\n\t[C1] nvarchar(4000),\n\t[C2] nvarchar(4000),\n\t[C3] nvarchar(4000),\n\t[C4] nvarchar(4000)\n\t)\n\tWITH (\n\tLOCATION = 'raw/taxi_zone.csv',\n\tDATA_SOURCE = [nyc-taxi-data_marlabsnycanalyticsdl_dfs_core_windows_net],\n\tFILE_FORMAT = [SynapseDelimitedTextFormat]\n\t)\nGO\n\n\nSELECT TOP 100 * FROM bronze.taxi_zone2\nGO",
+					"metadata": {
+						"language": "sql"
+					},
+					"currentConnection": {
+						"databaseName": "ny_taxi_ldw",
+						"poolName": "Built-in"
+					},
+					"resultLimit": 5000
+				},
+				"type": "SqlQuery"
+			},
+			"dependsOn": []
+		},
+		{
 			"name": "[concat(parameters('workspaceName'), '/Create_datasource')]",
 			"type": "Microsoft.Synapse/workspaces/sqlscripts",
 			"apiVersion": "2019-06-01-preview",
@@ -355,7 +375,7 @@
 			"dependsOn": []
 		},
 		{
-			"name": "[concat(parameters('workspaceName'), '/SQL script 2')]",
+			"name": "[concat(parameters('workspaceName'), '/create_external_table')]",
 			"type": "Microsoft.Synapse/workspaces/sqlscripts",
 			"apiVersion": "2019-06-01-preview",
 			"properties": {
@@ -363,7 +383,7 @@
 					"name": "ldw"
 				},
 				"content": {
-					"query": "-- Create a new external table\nCREATE EXTERNAL TABLE  bronze.taxi_zone1\n    (\n        loacation_id SMALLINT,\n        borough VARCHAR(15),\n        zone VARCHAR(15),\n        service_zone VARCHAR(15)\n     )\n    WITH (\n        LOCATION = 'raw/taxi_zone.csv',\n        DATA_SOURCE = nyc_taxi_src,\n        FILE_FORMAT = csv_file_format1\n    );\n\n--DROP EXTERNAL TABLE bronze.taxi_zone\n\nSELECT TOP (100) *\n FROM bronze.taxi_zone1\n\n\nCREATE EXTERNAL TABLE bronze.taxi_zone\n    ( \n        location_id SMALLINT,\n        borough VARCHAR(15),\n        zone VARCHAR(50),\n        service_zone VARCHAR(15)\n     )\n    WITH (\n        LOCATION = 'raw/taxi_zone.csv',\n        DATA_SOURCE = nyc_taxi_src,\n        FILE_FORMAT = csv_file_format\n    );\n\n\nSELECT * FROM bronze.taxi_zone;\n",
+					"query": "-- Create a new external table\nCREATE EXTERNAL TABLE  bronze.taxi_zone\n    (\n        loacation_id SMALLINT,\n        borough VARCHAR(15),\n        zone VARCHAR(50),\n        service_zone VARCHAR(15)\n     )\n    WITH (\n        LOCATION = 'raw/taxi_zone.csv',\n        DATA_SOURCE = nyc_taxi_src,\n        FILE_FORMAT = csv_file_format\n    );\n\n--DROP EXTERNAL TABLE bronze.taxi_zone2\n\nSELECT TOP (100) *\n FROM bronze.taxi_zone\n\n\nCREATE EXTERNAL TABLE bronze.taxi_zone\n    ( \n        location_id SMALLINT,\n        borough VARCHAR(15),\n        zone VARCHAR(50),\n        service_zone VARCHAR(15)\n     )\n    WITH (\n        LOCATION = 'raw/taxi_zone.csv',\n        DATA_SOURCE = nyc_taxi_src,\n        FILE_FORMAT = csv_file_format\n    );\n\n\nSELECT * FROM bronze.taxi_zone;\n",
 					"metadata": {
 						"language": "sql"
 					},
@@ -378,27 +398,7 @@
 			"dependsOn": []
 		},
 		{
-			"name": "[concat(parameters('workspaceName'), '/SQL script 3')]",
-			"type": "Microsoft.Synapse/workspaces/sqlscripts",
-			"apiVersion": "2019-06-01-preview",
-			"properties": {
-				"content": {
-					"query": "IF NOT EXISTS (SELECT * FROM sys.external_file_formats WHERE name = 'SynapseDelimitedTextFormat') \n\tCREATE EXTERNAL FILE FORMAT [SynapseDelimitedTextFormat] \n\tWITH ( FORMAT_TYPE = DELIMITEDTEXT ,\n\t       FORMAT_OPTIONS (\n\t\t\t FIELD_TERMINATOR = ',',\n\t\t\t USE_TYPE_DEFAULT = FALSE\n\t\t\t))\nGO\n\nIF NOT EXISTS (SELECT * FROM sys.external_data_sources WHERE name = 'nyc-taxi-data_marlabsnycanalyticsdl_dfs_core_windows_net') \n\tCREATE EXTERNAL DATA SOURCE [nyc-taxi-data_marlabsnycanalyticsdl_dfs_core_windows_net] \n\tWITH (\n\t\tLOCATION = 'abfss://nyc-taxi-data@marlabsnycanalyticsdl.dfs.core.windows.net' \n\t)\nGO\n\nCREATE EXTERNAL TABLE bronze.taxi_zone2 (\n\t[C1] nvarchar(4000),\n\t[C2] nvarchar(4000),\n\t[C3] nvarchar(4000),\n\t[C4] nvarchar(4000)\n\t)\n\tWITH (\n\tLOCATION = 'raw/taxi_zone.csv',\n\tDATA_SOURCE = [nyc-taxi-data_marlabsnycanalyticsdl_dfs_core_windows_net],\n\tFILE_FORMAT = [SynapseDelimitedTextFormat]\n\t)\nGO\n\n\nSELECT TOP 100 * FROM bronze.taxi_zone2\nGO",
-					"metadata": {
-						"language": "sql"
-					},
-					"currentConnection": {
-						"databaseName": "ny_taxi_ldw",
-						"poolName": "Built-in"
-					},
-					"resultLimit": 5000
-				},
-				"type": "SqlQuery"
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('workspaceName'), '/SQL script 4')]",
+			"name": "[concat(parameters('workspaceName'), '/SQL script 5')]",
 			"type": "Microsoft.Synapse/workspaces/sqlscripts",
 			"apiVersion": "2019-06-01-preview",
 			"properties": {
@@ -406,7 +406,7 @@
 					"name": "ldw"
 				},
 				"content": {
-					"query": "\nUSE ny_taxi_ldw;\n\nCREATE EXTERNAL DATA SOURCE nyc_taxi_src1\nWITH\n  ( \n    LOCATION = 'https://marlabsnycanalyticsdl.dfs.core.windows.net/nyc-taxi-data' \n  );\n\nCREATE EXTERNAL FILE FORMAT csv_file_format2\nWITH (\n        FORMAT_TYPE = DELIMITEDTEXT,\n        FORMAT_OPTIONS ( \n\n             FIELD_TERMINATOR = ',',\n            STRING_DELIMITER = '\"',\n            FIRST_ROW = 2,\n            USE_TYPE_DEFAULT = FALSE, \n            ENCODING = 'UTF8',\n            PARSER_VERSION = '2.0'\n        ) \n    );\n\n-- Create a new external table\nCREATE EXTERNAL TABLE bronze.taxi_zone2\n    ( \n        location_id SMALLINT,\n        borough VARCHAR(15),\n        zone VARCHAR(50),\n        service_zone VARCHAR(15)\n     )\n    WITH (\n        LOCATION = 'raw/taxi_zone.csv',\n        DATA_SOURCE = nyc_taxi_src,\n        FILE_FORMAT = csv_file_format2\n    );\n\n\nSELECT * FROM bronze.taxi_zone2;\n\n",
+					"query": "IF NOT EXISTS(SELECT * FROM sys.external_file_formats where name='csv_file_format_pv1')\n    CREATE EXTERNAL FILE FORMAT csv_file_format_pv1\n    WITH (\n            FORMAT_TYPE = DELIMITEDTEXT,\n            FORMAT_OPTIONS ( \n\n                FIELD_TERMINATOR = ',',\n                STRING_DELIMITER = '\"',\n                FIRST_ROW = 2,\n                USE_TYPE_DEFAULT = FALSE, \n                ENCODING = 'UTF8',\n                PARSER_VERSION = '2.0'\n            ) \n        );",
 					"metadata": {
 						"language": "sql"
 					},
@@ -430,6 +430,29 @@
 				},
 				"content": {
 					"query": "CREATE DATABASE ny_taxi_ldw\nGO\n\nALTER DATABASE ny_taxi_ldw COLLATE Latin1_General_100_BIN2_UTF8\nGO\n\nUSE ny_taxi_ldw\nGO\n\nCREATE SCHEMA bronze\nGO\n\nCREATE SCHEMA silver\nGO\n\nCREATE SCHEMA gold\nGO",
+					"metadata": {
+						"language": "sql"
+					},
+					"currentConnection": {
+						"databaseName": "ny_taxi_ldw",
+						"poolName": "Built-in"
+					},
+					"resultLimit": 5000
+				},
+				"type": "SqlQuery"
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/rejected_row')]",
+			"type": "Microsoft.Synapse/workspaces/sqlscripts",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"folder": {
+					"name": "ldw"
+				},
+				"content": {
+					"query": "IF OBJECT_ID('bronze.taxi_zone') IS NOT NULL\n  DROP EXTERNAL TABLE bronze.taxi_zone\n\n--Create a new external table\nCREATE EXTERNAL TABLE bronze.taxi_zone\n  (\n\n    location_id SMALLINT,\n    borough VARCHAR(15),\n    zone VARCHAR(5),\n    service_zone VARCHAR(15)\n  )\n  WITH (\n    LOCATION = 'raw/taxi_zone.csv',\n    DATA_SOURCE = nyc_taxi_src,\n    FILE_FORMAT = csv_file_format_pv1,\n    REJECT_VALUE = 10,\n    REJECTED_ROW_LOCATION = 'rejections/taxi_zone'\n\n  );\n\nSELECT * from bronze.taxi_zone",
 					"metadata": {
 						"language": "sql"
 					},
