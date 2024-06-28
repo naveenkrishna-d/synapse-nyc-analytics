@@ -2,7 +2,7 @@
 	"name": "Create_datasource",
 	"properties": {
 		"folder": {
-			"name": "ldw"
+			"name": "marlabsIDW"
 		},
 		"content": {
 			"query": "CREATE EXTERNAL DATA SOURCE nyc_taxi_src\nWITH\n  ( LOCATION = 'https://marlabsnycanalyticsdl.dfs.core.windows.net/nyc-taxi-data'  \n  );\n\n",
