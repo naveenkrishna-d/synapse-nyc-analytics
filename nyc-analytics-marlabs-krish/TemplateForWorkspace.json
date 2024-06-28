@@ -682,7 +682,7 @@
 			"apiVersion": "2019-06-01-preview",
 			"properties": {
 				"folder": {
-					"name": "ldw"
+					"name": "marlabsIDW"
 				},
 				"content": {
 					"query": "CREATE EXTERNAL DATA SOURCE nyc_taxi_src\nWITH\n  ( LOCATION = 'https://marlabsnycanalyticsdl.dfs.core.windows.net/nyc-taxi-data'  \n  );\n\n",
@@ -705,7 +705,7 @@
 			"apiVersion": "2019-06-01-preview",
 			"properties": {
 				"folder": {
-					"name": "ldw"
+					"name": "marlabsIDW"
 				},
 				"content": {
 					"query": "-- Create an external file format for DELIMITED (CSV/TSV) files.\nCREATE EXTERNAL FILE FORMAT csv_file_format1\nWITH (\n        FORMAT_TYPE = DELIMITEDTEXT, \n        FORMAT_OPTIONS ( \n            FIELD_TERMINATOR = ',',\n            STRING_DELIMITER = '\"',\n            FIRST_ROW = 2,\n            USE_TYPE_DEFAULT = FALSE,\n            ENCODING = 'UTF8',\n            PARSER_VERSION='2.0'\n     ));\n\n\n\n\n",
@@ -748,7 +748,7 @@
 			"apiVersion": "2019-06-01-preview",
 			"properties": {
 				"folder": {
-					"name": "ldw"
+					"name": "marlabsIDW"
 				},
 				"content": {
 					"query": "IF NOT EXISTS(SELECT * FROM sys.external_file_formats where name='csv_file_format_pv1')\n    CREATE EXTERNAL FILE FORMAT csv_file_format_pv1\n    WITH (\n            FORMAT_TYPE = DELIMITEDTEXT,\n            FORMAT_OPTIONS ( \n\n                FIELD_TERMINATOR = ',',\n                STRING_DELIMITER = '\"',\n                FIRST_ROW = 2,\n                USE_TYPE_DEFAULT = FALSE, \n                ENCODING = 'UTF8',\n                PARSER_VERSION = '2.0'\n            ) \n        );",
@@ -771,7 +771,7 @@
 			"apiVersion": "2019-06-01-preview",
 			"properties": {
 				"folder": {
-					"name": "ldw"
+					"name": "marlabsIDW"
 				},
 				"content": {
 					"query": "-- Create a new external table\nCREATE EXTERNAL TABLE  bronze.taxi_zone\n    (\n        loacation_id SMALLINT,\n        borough VARCHAR(15),\n        zone VARCHAR(50),\n        service_zone VARCHAR(15)\n     )\n    WITH (\n        LOCATION = 'raw/taxi_zone.csv',\n        DATA_SOURCE = nyc_taxi_src,\n        FILE_FORMAT = csv_file_format\n    );\n\n--DROP EXTERNAL TABLE bronze.taxi_zone2\n\nSELECT TOP (100) *\n FROM bronze.taxi_zone\n\n\n-- CREATE EXTERNAL TABLE bronze.taxi_zone\n--     ( \n--         location_id SMALLINT,\n--         borough VARCHAR(15),\n--         zone VARCHAR(50),\n--         service_zone VARCHAR(15)\n--      )\n--     WITH (\n--         LOCATION = 'raw/taxi_zone.csv',\n--         DATA_SOURCE = nyc_taxi_src,\n--         FILE_FORMAT = csv_file_format\n--     );\n\n\n-- SELECT * FROM bronze.taxi_zone;\n",
@@ -794,7 +794,7 @@
 			"apiVersion": "2019-06-01-preview",
 			"properties": {
 				"folder": {
-					"name": "ldw"
+					"name": "marlabsIDW"
 				},
 				"content": {
 					"query": "CREATE DATABASE ny_taxi_ldw\nGO\n\nALTER DATABASE ny_taxi_ldw COLLATE Latin1_General_100_BIN2_UTF8\nGO\n\nUSE ny_taxi_ldw\nGO\n\nCREATE SCHEMA bronze\nGO\n\nCREATE SCHEMA silver\nGO\n\nCREATE SCHEMA gold\nGO",
@@ -817,7 +817,7 @@
 			"apiVersion": "2019-06-01-preview",
 			"properties": {
 				"folder": {
-					"name": "ldw"
+					"name": "marlabsIDW"
 				},
 				"content": {
 					"query": "IF OBJECT_ID('bronze.taxi_zone') IS NOT NULL\n  DROP EXTERNAL TABLE bronze.taxi_zone\n\n--Create a new external table\nCREATE EXTERNAL TABLE bronze.taxi_zone\n  (\n\n    location_id SMALLINT,\n    borough VARCHAR(15),\n    zone VARCHAR(5),\n    service_zone VARCHAR(15)\n  )\n  WITH (\n    LOCATION = 'raw/taxi_zone.csv',\n    DATA_SOURCE = nyc_taxi_src,\n    FILE_FORMAT = csv_file_format_pv1,\n    REJECT_VALUE = 10,\n    REJECTED_ROW_LOCATION = 'rejections/taxi_zone'\n\n  );\n\nSELECT * from bronze.taxi_zone",
