@@ -1,6 +1,9 @@
 {
 	"name": "8_check_duplicates",
 	"properties": {
+		"folder": {
+			"name": "DEMOS"
+		},
 		"content": {
 			"query": "SELECT location_id, COUNT(*) \nFROM \n    OPENROWSET(\n        BULK 'https://marlabsnycanalyticsdl.dfs.core.windows.net/nyc-taxi-data/raw/taxi_zone.csv',\n        FORMAT='CSV',\n        PARSER_VERSION='2.0',\n        HEADER_ROW = TRUE,\n        FIELDTERMINATOR=',',\n        ROWTERMINATOR='\\n'\n)WITH (\n    location_id SMALLINT 1,\n    borough VARCHAR(15) 2,\n    zone VARCHAR(50) 3,\n    service_zone VARCHAR(15) 4\n)\n AS [result]\n GROUP BY location_id\n HAVING COUNT(*)>1;\n\n--------------\nSELECT \n    MIN(total_amount) as min_total_amount,\n    MAX(total_amount) as max_total_amount,\n    AVG(total_amount) as avg_total_amount,\n    COUNT(1) as total_number_of_records,\n    COUNT(total_amount) as non_null_total_number_of_records\nFROM \n    OPENROWSET(\n        BULK 'trip_data_green_parquet/year=2020/month=01/',\n        FORMAT='PARQUET',\n        DATA_SOURCE = 'nyc_taxi_data_raw'\n)\n AS [result]\n\n-----\n\nSELECT \n    TOP 100 *\nFROM \n    OPENROWSET(\n        BULK 'trip_data_green_parquet/year=2020/month=01/',\n        FORMAT='PARQUET',\n        DATA_SOURCE = 'nyc_taxi_data_raw'\n)\n AS [result]\n ORDER BY total_amount\n\n-------\n\nSELECT \n    payment_type, COUNT(1) AS count\nFROM \n    OPENROWSET(\n        BULK 'trip_data_green_parquet/year=2020/month=01/',\n        FORMAT='PARQUET',\n        DATA_SOURCE = 'nyc_taxi_data_raw'\n)\n AS [result]\n GROUP BY payment_type\n ORDER BY payment_type\n\n\n----\nSELECT \n    payment_type, COUNT(1) AS count\nFROM \n    OPENROWSET(\n        BULK 'trip_data_green_parquet/year=2020/month=01/',\n        FORMAT='PARQUET',\n        DATA_SOURCE = 'nyc_taxi_data_raw'\n)\n AS [result]\n GROUP BY payment_type\n ORDER BY payment_type\n\n\n",
 			"metadata": {
