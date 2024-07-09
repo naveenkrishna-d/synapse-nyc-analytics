@@ -2,7 +2,7 @@
 	"name": "SQL script 1",
 	"properties": {
 		"content": {
-			"query": "-- This is auto-generated code\nSELECT\n    TOP 100 *\nFROM\n    OPENROWSET(\n        BULK '/trip_data_green_csv/year=2020/month=01/green_tripdata_2020-01.csv',\n        FORMAT = 'CSV',\n        DATA_SOURCE='nyc_taxi_data_raw',\n        PARSER_VERSION = '2.0'\n    ) AS [result]\n",
+			"query": "SELECT TOP 100 *\nFROM OPENROWSET(\n    BULK 'https://marlabsnycanalyticsdl.dfs.core.windows.net/nyc-taxi-data/raw/trip_data_green_parquet/year=*/month=*/*.parquet',\n    FORMAT = 'parquet'\n) AS rows\nWHERE rows.filepath(1)=2020 AND rows.filepath(2) IN ('01','02')\n\n--JSON\nSELECT JSON_VALUE(doc,'$.payment_type') AS payment_type,\n        JSON_VALUE(doc,'$.payment_type_desc') AS payment_type_desc\nFROM OPENROWSET(\n    BULK 'https://marlabsnycanalyticsdl.dfs.core.windows.net/nyc-taxi-data/raw/payment_type.json',\n    FORMAT = 'csv',\n    FIELDTERMINATOR='0x0b',\n    FIELDQUOTE='0x0b'\n    --ROWTERMINATOR='0x0b'\n) WITH (doc NVARCHAR(MAX))\nAS rows\n\n\nSELECT TOP 100 * \nFROM OPENROWSET(\n    BULK 'https://marlabsnycanalyticsdl.dfs.core.windows.net/nyc-taxi-data/raw/vendor.csv',\n    FORMAT = 'csv',\n    PARSER_VERSION = '2.0',\n    HEADER_ROW=TRUE\n) WITH (\n    vendor_id VARCHAR(10) 1,\n    name VARCHAR(10) 2\n)\nAS rows",
 			"metadata": {
 				"language": "sql"
 			},
